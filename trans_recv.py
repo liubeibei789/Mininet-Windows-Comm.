@@ -12,19 +12,25 @@
 
 #!/usr/bin/python
 
+import config
+
 import socket
 import threading
 import time
 
-def receive(ip,port):  # '10.144.154.181', 2222
+global FLAG
+FLAG = 0
+
+def receive(ip,port):  
+	global FLAG
 	i = 1
-	while True:
+	while FLAG == 0:
 		print "hello I am server on windows1..."
 		sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		sock.bind((ip,port))
 		sock.listen(5)
 		connection,address = sock.accept()
-		fileName = "bbb" + "_" + str(i) + ".txt"
+		fileName = config.cfp['file_recv'] + '_' + str(i) + '.txt'
 		fo = open( fileName,"w" )
 		try:
 			connection.settimeout(5)
@@ -39,13 +45,15 @@ def receive(ip,port):  # '10.144.154.181', 2222
 			fo.close()
 		connection.close()
 		i = i+1
+		
 	
-def transmit(ip,port):  # '10.206.201.201', 4444
+def transmit(ip,port):  
+	global FLAG
 	i = 1
-	while True:
-		while True:
+	while FLAG == 0:
+		while FLAG == 0:
 			try:
-				fileName2 = "bbb" + "_" + str(i) + ".txt"
+				fileName2 = config.cfp['file_trans'] + '_' + str(i) + '.txt'
 				fd = open( fileName2,"r" )
 				print "file found!"
 				break
@@ -60,13 +68,35 @@ def transmit(ip,port):  # '10.206.201.201', 4444
 		print sock2.recv(1024) # receive the message from the server
 		sock2.close()
 		i = i+1
+		
+def exit():
+	global FLAG
+	while FLAG == 0:
+		try:
+			instruction = raw_input()
+			if instruction == 'exit':
+				print "server closed"
+				FLAG = 1
+			else:
+				print "to close the server,type: exit"
+		except:
+			pass
+		finally:
+			pass
 			
-threads = []
-t1 = threading.Thread( target = receive, args=('10.144.154.181', 2222))
-threads.append(t1)
-t2 = threading.Thread( target = transmit, args=('10.206.201.201', 4444))
-threads.append(t2)
 
-if __name__ == '__main__':
+def do():
+	threads = []
+	t1 = threading.Thread( target = receive, args=(config.cfp['ip_windows'], config.cfp['port_windows']))
+	threads.append(t1)
+	t2 = threading.Thread( target = transmit, args=(config.cfp['ip_mininiet'], config.cfp['port_mininet']))
+	threads.append(t2)
+	t3 = threading.Thread( target = exit, args=())
+	threads.append(t3)
+	
 	for t in threads:
 		t.start()
+
+
+if __name__ == '__main__':
+	a = do()
